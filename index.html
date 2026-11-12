@@ -207,6 +207,7 @@
   .finish small { letter-spacing:.24em; text-transform:uppercase; color:var(--muted); font-weight:700; }
   .finish p { font-size:clamp(34px, 6.4vw, 78px); font-weight:800; line-height:.98; margin:10px 0 22px; letter-spacing:-.03em; }
   .finish .socials { justify-content:center; }
+  .fin-mtn { display:none; }
 
   /* ---------- chairlift chat ---------- */
   .chat-wrap { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 400px); gap:40px; align-items:center; }
@@ -350,6 +351,9 @@
     main > section { break-inside:avoid; page-break-inside:avoid; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
     h2 { break-after:avoid; page-break-after:avoid; }
     .dropin { animation:none; } .tilt { transform:none !important; } .skicard { box-shadow:none; }
+    /* Safari's PDF engine mangles gradients with transparent stops (card came out black), so print uses opaque stops only. */
+    .skicard { background:linear-gradient(135deg, #0f2238 0%, #173766 55%, #2463eb 100%); }
+    .finish { min-height:var(--fin-h, 0); }
     .reveal { opacity:1 !important; transform:none !important; transition:none !important; }
     .run, .card, .gear > div, .apres div, .report div { break-inside:avoid; page-break-inside:avoid; box-shadow:none; border:1px solid #dde5ee; }
     /* Set by paginate() before printing: explicit page breaks every engine honours (Safari/iOS ignore break-inside on grids). */
@@ -1440,6 +1444,11 @@ window.CV_CONTENT = {
         <small>${t.finish}</small>
         <p>${t.motto}</p>
         ${socials(d)}
+        <svg class="fin-mtn" viewBox="0 0 560 160" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 160V110l70-50 50 35 70-75 60 65 50-30 60 55 70-75 70 55 60-30v100z" fill="#dbe7f5"/>
+          <path d="M175 38 190 20l15 18-8-4-7 6-7-6zM415 52l15-17 15 17-8-4-7 6-7-6z" fill="#ffffff"/>
+          <path d="M0 160v-30l90-40 60 30 80-50 90 55 80-40 80 35 80-25v65z" fill="#c4d7ef"/>
+        </svg>
       </section>`;
 
     // toolbar, fab, overlay labels
@@ -1818,8 +1827,17 @@ window.CV_CONTENT = {
     ${p}.gear>div:last-child:nth-child(3n+1){grid-column:1/-1}
     ${p}.gear>div:last-child:nth-child(3n+2){grid-column:span 2}
     ${p}.two{grid-template-columns:1fr 1fr}
-    ${p}.apres{grid-template-columns:repeat(5,1fr)}
-    ${p}.finish p{font-size:60px}`;
+    ${p}.apres{grid-template-columns:repeat(2,1fr);gap:16px}
+    ${p}.apres div{padding:24px 28px;min-height:128px}
+    ${p}.apres b{font-size:26px;margin-bottom:6px}
+    ${p}.apres span{font-size:18px}
+    ${p}.finish{margin:24px 0 0;padding:70px 40px 230px;background:#f2f7fc;border-radius:26px;display:flex;flex-direction:column;justify-content:center;align-items:center}
+    ${p}.finish>*{position:relative;z-index:1}
+    ${p}.finish small{font-size:14px}
+    ${p}.finish p{font-size:84px;margin:14px 0 30px;text-wrap:balance}
+    ${p}.finish .social{width:64px;height:64px;border-radius:18px}
+    ${p}.finish .social svg{width:34px;height:34px}
+    ${p}.finish>.fin-mtn{display:block;position:absolute;z-index:0;left:0;right:0;bottom:16px;width:100%;height:210px}`;
   const printCss = document.createElement("style");
   printCss.textContent = `@media print{${PRINT_LAYOUT("html ")}}
     ${PRINT_LAYOUT("html.measuring ")}
@@ -1828,47 +1846,45 @@ window.CV_CONTENT = {
     html.measuring .reveal{opacity:1!important;transform:none!important;transition:none!important}`;
   document.head.appendChild(printCss);
 
-  // Page box in pre-zoom CSS px (print uses zoom .8). Safari/iOS ignore @page size/margin and add ~0.5in
-  // margins on Letter paper, so they get a narrower, shorter page.
+  // Usable page in pre-zoom CSS px (print uses zoom .8). Chrome, Edge, Firefox and desktop Safari print A4 with
+  // margin 0 (1404px tall); iPhone/iPad may use Letter paper with their own margins, so they get a smaller page.
   const UA = navigator.userAgent;
-  const WEBKIT_PRINT = /iP(hone|ad|od)/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
-    /^((?!chrome|chromium|crios|android|edg|fxios|firefox).)*safari/i.test(UA);
-  const PAGE = WEBKIT_PRINT ? { w: 900, h: 1140 } : { w: 992, h: 1340 };
+  const IOS_PRINT = /iP(hone|ad|od)/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const PAGE = IOS_PRINT ? { w: 900, h: 1180 } : { w: 992, h: 1330 };
 
-  // Measures every section in the print layout, then marks explicit page breaks (.pb) so no section or card
-  // is cut. Tall sections break between their cards; anything still taller than a page is zoomed to fit (.fit).
+  // Fixed page plan: 1) ski pass + snow report, 2) runs 1-2, 3) runs 3-4, 4) gear + ski school,
+  // 5) après-ski + finish line (the finish grows to fill the page). Every page starts with a forced break,
+  // which all engines honour (Safari ignores break-inside on grids); a page taller than the paper is zoomed to fit.
+  const PRINT_PAGES = [
+    ["#s-top", "#s-report"],
+    ["#s-runs > h2", "#s-runs > article:nth-of-type(1)", "#s-runs > article:nth-of-type(2)"],
+    ["#s-runs > article:nth-of-type(3)", "#s-runs > article:nth-of-type(4)"],
+    ["#s-gear", "#s-school"],
+    ["#s-apres", "#s-finish"],
+  ];
   function paginate() {
     const root = document.documentElement;
     document.querySelectorAll("#app .pb, #app .fit").forEach((el) => { el.classList.remove("pb", "fit"); el.style.removeProperty("--fit"); });
+    root.style.removeProperty("--fin-h");
     root.style.setProperty("--mw", `${PAGE.w}px`);
     root.classList.add("measuring");
-    const top = (el) => el.getBoundingClientRect().top;
-    const blocks = [];
-    let end = 0;
-    document.querySelectorAll("#app > section").forEach((sec) => {
-      const r = sec.getBoundingClientRect();
-      if (!r.height) return;
-      end = r.bottom;
-      if (r.height <= PAGE.h) { blocks.push({ el: sec, body: sec, top: r.top }); return; }
-      let head = null, first = true;
-      [...sec.children].forEach((ch) => {
-        if (/^H\d$/.test(ch.tagName)) { head = head || ch; return; }
-        blocks.push({ el: first ? sec : head || ch, body: ch, top: first ? r.top : top(head || ch) });
-        head = null; first = false;
-      });
+    const pages = PRINT_PAGES.map((sels) => sels.map((s) => $(s)).filter(Boolean)).filter((els) => els.length).map((els) => {
+      const start = els[0].tagName === "H2" ? els[0].parentElement : els[0];
+      const last = els[els.length - 1];
+      const top = start.getBoundingClientRect().top - (start.tagName === "ARTICLE" ? 36 : 0);
+      const height = last.getBoundingClientRect().bottom + parseFloat(getComputedStyle(last).marginBottom) - top;
+      const fin = els.find((el) => el.id === "s-finish");
+      const finH = fin ? PAGE.h - 30 - (fin.getBoundingClientRect().top - top) : 0;
+      return { els, start, height, fill: fin && finH > fin.getBoundingClientRect().height ? finH : 0 };
     });
-    const fits = blocks.map((b, i) => {
-      const h = (i + 1 < blocks.length ? blocks[i + 1].top : end) - b.top;
-      const bodyH = b.body.getBoundingClientRect().height;
-      return h > PAGE.h && bodyH ? Math.max(.4, (PAGE.h - (h - bodyH)) / bodyH) : 1;
-    });
-    const heights = blocks.map((b, i) => Math.min((i + 1 < blocks.length ? blocks[i + 1].top : end) - b.top, PAGE.h));
     root.classList.remove("measuring");
-    let used = 0;
-    blocks.forEach((b, i) => {
-      if (fits[i] < 1) { b.body.classList.add("fit"); b.body.style.setProperty("--fit", fits[i].toFixed(3)); }
-      if (used && used + heights[i] > PAGE.h) { b.el.classList.add("pb"); used = heights[i] + (b.el.tagName === "SECTION" ? 0 : 36); }
-      else used += heights[i];
+    pages.forEach((p, i) => {
+      if (i) p.start.classList.add("pb");
+      if (p.fill) root.style.setProperty("--fin-h", `${Math.floor(p.fill)}px`);
+      else if (p.height > PAGE.h) {
+        const f = Math.max(.5, PAGE.h / p.height).toFixed(3);
+        p.els.forEach((el) => { el.classList.add("fit"); el.style.setProperty("--fit", f); });
+      }
     });
   }
   addEventListener("beforeprint", paginate);
