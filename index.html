@@ -350,6 +350,7 @@
     .toolbar, .slope, .fab, .overlay, .drop, #s-chat, .lanyard, .sc-glare { display:none !important; }
     .print-only { display:inline; color:var(--muted); font-size:12px; }
     .skicard .print-only { color:#fff; }
+    .print-only a { color:inherit; text-decoration:none; }
     main > section { break-inside:avoid; page-break-inside:avoid; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
     h2 { break-after:avoid; page-break-after:avoid; }
     .dropin { animation:none; } .tilt { transform:none !important; } .skicard { box-shadow:none; }
@@ -1319,7 +1320,7 @@ window.CV_CONTENT = {
     <div class="socials">
       <a class="social" href="mailto:${P.email}" data-tip="${P.email}" aria-label="${d.t.emailLabel}">${ICON.gmail}</a>
       <a class="social" href="${P.linkedin}" target="_blank" rel="noopener" data-tip="LinkedIn" aria-label="${d.t.linkedinLabel}">${ICON.linkedin}</a>
-      <span class="print-only"><span>${P.email}</span><i> · </i><span>${P.linkedinLabel}</span></span>
+      <span class="print-only"><a href="mailto:${P.email}">${P.email}</a><i> · </i><a href="${P.linkedin}">${P.linkedinLabel}</a></span>
     </div>`;
   const timeline = (d) => `<div class="kv">${d.jobs.map((j) => `<div><b>${j.title}</b><small>${j.period}</small></div>`).join("")}</div>`;
   const toolbox = (d) => `<div class="kv inline">${d.skills.map((g) => `<div><b>${g.name}</b> <small>${g.items.map((i) => i.name).join(", ")}</small></div>`).join("")}</div>`;
