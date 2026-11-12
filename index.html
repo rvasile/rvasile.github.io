@@ -1846,11 +1846,13 @@ window.CV_CONTENT = {
     html.measuring .reveal{opacity:1!important;transform:none!important;transition:none!important}`;
   document.head.appendChild(printCss);
 
-  // Usable page in pre-zoom CSS px (print uses zoom .8). Chrome, Edge, Firefox and desktop Safari print A4 with
-  // margin 0 (1404px tall); iPhone/iPad may use Letter paper with their own margins, so they get a smaller page.
+  // Usable page in pre-zoom CSS px (print uses zoom .8). Chrome, Edge and Firefox print A4 with margin 0 (1404px tall).
+  // Safari's print dialog (Mac, iPhone, iPad) adds its own margins plus header/footer lines, so it gets a smaller,
+  // safe page; with "Export as PDF" that just leaves a little extra white space at the bottom.
   const UA = navigator.userAgent;
-  const IOS_PRINT = /iP(hone|ad|od)/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const PAGE = IOS_PRINT ? { w: 900, h: 1180 } : { w: 992, h: 1330 };
+  const SAFARI_PRINT = /iP(hone|ad|od)/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    /^((?!chrome|chromium|crios|android|edg|fxios|firefox).)*safari/i.test(UA);
+  const PAGE = SAFARI_PRINT ? { w: 900, h: 1100 } : { w: 992, h: 1330 };
 
   // Fixed page plan: 1) ski pass + snow report, 2) runs 1-2, 3) runs 3-4, 4) gear + ski school,
   // 5) après-ski + finish line (the finish grows to fill the page). Every page starts with a forced break,
