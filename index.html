@@ -32,7 +32,6 @@
   a { color:inherit; }
   button { font:inherit; color:inherit; }
   .mono { font-family:"JetBrains Mono", ui-monospace, monospace; }
-  .print-only { display:none; }
   body.instant .reveal { transition:none !important; }
   /* Nothing is shown until the page is built and fonts are in; animations wait too. */
   html.booting body { visibility:hidden; }
@@ -348,9 +347,6 @@
     html { zoom:.8; }
     body { background:#fff; font-size:12px; }
     .toolbar, .slope, .fab, .overlay, .drop, #s-chat, .lanyard, .sc-glare { display:none !important; }
-    .print-only { display:inline; color:var(--muted); font-size:12px; }
-    .skicard .print-only { color:#fff; }
-    .print-only a { color:inherit; text-decoration:none; }
     main > section { break-inside:avoid; page-break-inside:avoid; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
     h2 { break-after:avoid; page-break-after:avoid; }
     .dropin { animation:none; } .tilt { transform:none !important; } .skicard { box-shadow:none; }
@@ -1320,7 +1316,6 @@ window.CV_CONTENT = {
     <div class="socials">
       <a class="social" href="mailto:${P.email}" data-tip="${P.email}" aria-label="${d.t.emailLabel}">${ICON.gmail}</a>
       <a class="social" href="${P.linkedin}" target="_blank" rel="noopener" data-tip="LinkedIn" aria-label="${d.t.linkedinLabel}">${ICON.linkedin}</a>
-      <span class="print-only"><a href="mailto:${P.email}">${P.email}</a><i> · </i><a href="${P.linkedin}">${P.linkedinLabel}</a></span>
     </div>`;
   const timeline = (d) => `<div class="kv">${d.jobs.map((j) => `<div><b>${j.title}</b><small>${j.period}</small></div>`).join("")}</div>`;
   const toolbox = (d) => `<div class="kv inline">${d.skills.map((g) => `<div><b>${g.name}</b> <small>${g.items.map((i) => i.name).join(", ")}</small></div>`).join("")}</div>`;
@@ -1804,13 +1799,11 @@ window.CV_CONTENT = {
     ${p}.brand{min-width:0}
     ${p}.pass-type{flex:none}
     ${p}.pass-type b,${p}.pass-type small{white-space:nowrap}
-    ${p}.sc-bot{gap:14px;justify-content:flex-start}
-    ${p}.rfid{display:none}
-    ${p}.skicard .socials{gap:8px;min-width:0}
-    ${p}.skicard .social{width:34px;height:34px;border-radius:10px;flex:none}
-    ${p}.skicard .social svg{width:18px;height:18px}
-    ${p}.skicard .print-only{display:flex;flex-direction:column;gap:1px;margin-left:6px;font-size:11px;line-height:1.3;color:#fff;min-width:0;overflow-wrap:anywhere}
-    ${p}.skicard .print-only i{display:none}
+    ${p}.sc-bot{gap:14px}
+    ${p}.rfid span{display:inline}
+    ${p}.skicard .socials{gap:8px;flex:none}
+    ${p}.skicard .social{width:40px;height:40px;border-radius:12px}
+    ${p}.skicard .social svg{width:22px;height:22px}
     ${p}.sc-holo{display:flex;right:26px;width:40px}
     ${p}.sc-mid{grid-template-columns:96px 1fr;gap:18px;align-items:center}
     ${p}.photo{width:96px;height:118px;font-size:34px}
