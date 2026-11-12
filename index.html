@@ -36,6 +36,7 @@
   body.instant .reveal { transition:none !important; }
   /* Nothing is shown until the page is built and fonts are in; animations wait too. */
   html.booting body { visibility:hidden; }
+  @media print { html.booting body { visibility:visible; } body, body * { animation:none !important; } }
   html.booting * { animation-play-state:paused !important; }
   body { animation:pagein .35s ease-out; }
   @keyframes pagein { from { opacity:0; } }
@@ -56,7 +57,7 @@
   .seg button:focus-visible, .tb-btn:focus-visible, .social:focus-visible, .drop:focus-visible, .fab:focus-visible { outline:3px solid #2463eb88; outline-offset:2px; }
 
   /* ---------- slope tracker ---------- */
-  .slope { position:fixed; left:0; top:0; bottom:0; width:110px; z-index:4; }
+  .slope { position:fixed; left:0; top:0; bottom:0; width:110px; z-index:4; pointer-events:none; }
   .slope svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
   #track { fill:none; stroke:#b8cde3; stroke-width:3; stroke-dasharray:3 7; }
   #trail { fill:none; stroke:var(--blue); stroke-width:3; stroke-linecap:round; opacity:.55; }
@@ -84,7 +85,8 @@
   .cp.passed { box-shadow:0 0 0 3px #2463eb44; }
   .cp.passed:hover, .cp.passed:focus-visible { box-shadow:0 0 0 4px #fff, 0 0 0 7px #2463eb66; }
 
-  main { margin-left:130px; padding:0 clamp(18px, 5vw, 64px) 40px; max-width:1100px; }
+  /* Centred on wide screens, but never closer than 130px to the left so the slope tracker stays clear. */
+  main { margin-left:max(130px, calc(50% - 550px)); margin-right:auto; padding:0 clamp(18px, 5vw, 64px) 40px; max-width:1100px; }
   section { padding:72px 0 24px; }
   h2 { font-size:clamp(30px, 4vw, 46px); margin:0 0 20px; letter-spacing:-.02em; line-height:1; }
   h2 small { display:block; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
@@ -128,6 +130,7 @@
   .photo { position:relative; overflow:hidden; width:96px; height:118px; border-radius:12px; background:repeating-linear-gradient(135deg, #ffffff14 0 8px, #ffffff08 8px 16px); border:2px solid #ffffffcc;
     display:grid; place-items:center; font-size:34px; font-weight:800; color:#fff; box-shadow:0 8px 18px -8px #0008; }
   .photo img, .avatar img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .photo:has(img), .avatar:has(img) { color:transparent; }
   .avatar img { border-radius:50%; }
   .skicard h1 { font-size:clamp(28px, 4.4vw, 42px); line-height:.95; margin:0; font-weight:800; letter-spacing:-.02em; }
   .role { color:#9cc3ff; font-weight:700; margin:4px 0 8px; font-size:15px; }
@@ -296,7 +299,9 @@
   .ov-close svg { width:18px; height:18px; }
 
   @media (max-width:900px) {
-    .slope { display:none; } main { margin-left:0; }
+    /* Compact slope: same track, checkpoints and skier (scaled in JS), in a narrow left rail. */
+    .slope { width:58px; }
+    main { margin-left:50px; padding-left:12px; padding-right:clamp(14px, 4vw, 40px); }
     .run.reveal { transform:translateY(28px); }
     .gear, .two { grid-template-columns:1fr 1fr; } .apres { grid-template-columns:1fr 1fr; }
     .gear > div:last-child:nth-child(n) { grid-column:auto; }
@@ -307,6 +312,8 @@
     .sc-mid { grid-template-columns:76px 1fr; } .photo { width:76px; height:94px; font-size:26px; }
   }
   @media (max-width:560px) {
+    .slope { width:46px; }
+    main { margin-left:40px; padding-left:8px; padding-right:14px; }
     .report, .gear, .two, .apres { grid-template-columns:1fr; } .run { grid-template-columns:1fr; padding:22px; }
     .pass-wrap { padding-top:76px; }
     .skicard { padding:22px 18px 16px; border-radius:18px; }
@@ -327,6 +334,8 @@
     .msg { font-size:14px; line-height:1.4; } .kv b { font-size:13px; } .kv small { font-size:12.5px; } .whys li { font-size:13px; }
     .kv > div { padding:3px 0; line-height:1.25; } .kv.inline small { font-size:12px; }
   }
+  /* Touch screens have no hover: checkpoint labels would only flash on tap. */
+  @media (hover:none) { .cp::after { display:none; } }
   @media (prefers-reduced-motion:reduce) {
     html { scroll-behavior:auto; }
     .dropin, .sc-holo, .drop-ic svg, .fab .dot { animation:none; }
@@ -341,15 +350,15 @@
     .toolbar, .slope, .fab, .overlay, .drop, #s-chat, .lanyard, .sc-glare { display:none !important; }
     .print-only { display:inline; color:var(--muted); font-size:12px; }
     .skicard .print-only { color:#fff; }
-    main { margin:0; padding:0 16mm; max-width:none; }
-    /* Keep each section on one page; a section taller than a page breaks only between cards. */
-    main > section { padding:14mm 0 2mm; break-inside:avoid; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
-    h2 { break-after:avoid; }
-    .pass-wrap { min-height:auto; }
-    .dropin { animation:none; } .tilt { transform:none !important; } .skicard { box-shadow:none; width:520px; }
-    .reveal { opacity:1 !important; transform:none !important; }
-    .run, .card, .gear > div, .apres div, .report div { break-inside:avoid; box-shadow:none; border:1px solid #dde5ee; }
-    .finish { margin-top:0; }
+    main > section { break-inside:avoid; page-break-inside:avoid; box-decoration-break:clone; -webkit-box-decoration-break:clone; }
+    h2 { break-after:avoid; page-break-after:avoid; }
+    .dropin { animation:none; } .tilt { transform:none !important; } .skicard { box-shadow:none; }
+    .reveal { opacity:1 !important; transform:none !important; transition:none !important; }
+    .run, .card, .gear > div, .apres div, .report div { break-inside:avoid; page-break-inside:avoid; box-shadow:none; border:1px solid #dde5ee; }
+    /* Set by paginate() before printing: explicit page breaks every engine honours (Safari/iOS ignore break-inside on grids). */
+    .pb { break-before:page; page-break-before:always; }
+    article.pb, h2.pb { margin-top:36px; }
+    .fit { zoom:var(--fit, 1); }
   }
 </style>
 <noscript><style>html.booting body { visibility:visible; }</style></noscript>
@@ -1310,7 +1319,7 @@ window.CV_CONTENT = {
     <div class="socials">
       <a class="social" href="mailto:${P.email}" data-tip="${P.email}" aria-label="${d.t.emailLabel}">${ICON.gmail}</a>
       <a class="social" href="${P.linkedin}" target="_blank" rel="noopener" data-tip="LinkedIn" aria-label="${d.t.linkedinLabel}">${ICON.linkedin}</a>
-      <span class="print-only">${P.email} · ${P.linkedinLabel}</span>
+      <span class="print-only"><span>${P.email}</span><i> · </i><span>${P.linkedinLabel}</span></span>
     </div>`;
   const timeline = (d) => `<div class="kv">${d.jobs.map((j) => `<div><b>${j.title}</b><small>${j.period}</small></div>`).join("")}</div>`;
   const toolbox = (d) => `<div class="kv inline">${d.skills.map((g) => `<div><b>${g.name}</b> <small>${g.items.map((i) => i.name).join(", ")}</small></div>`).join("")}</div>`;
@@ -1502,7 +1511,8 @@ window.CV_CONTENT = {
   /* ================= slope tracker ================= */
   const SEG = [["M", [50, 0]], ["C", [95, 90], [5, 160], [50, 250]], ["S", [95, 420], [50, 500]], ["S", [5, 670], [50, 750]], ["S", [95, 920], [50, 1000]]];
   // Inset keeps the skier figure (skis and poles included) on screen at the path extremes.
-  const N = 480, PAD_X = 34, PAD_Y = 42;
+  const N = 480;
+  let PAD_X = 34, PAD_Y = 42, SK = 1;
   const svg = $("#slopeSvg"), track = $("#track"), trail = $("#trail"), skier = $("#skier"), cpsBox = $("#cps");
   let samples = [], total = 0, cur = 0, target = 0, vel = 0, head = 0, sraf = 0, last = 0, cps = [], cpBtns = [];
 
@@ -1529,6 +1539,9 @@ window.CV_CONTENT = {
   function layoutSlope() {
     const r = svg.getBoundingClientRect();
     if (!r.width || !r.height) return;
+    // Phones/tablets get the narrow rail: same curve, tighter inset and a scaled-down skier.
+    const narrow = r.width < 90;
+    SK = narrow ? .62 : 1; PAD_X = narrow ? Math.round(r.width * .27) : 34; PAD_Y = narrow ? 34 : 42;
     svg.setAttribute("viewBox", `0 0 ${r.width} ${r.height}`);
     const w = r.width - 2 * PAD_X, h = r.height - 2 * PAD_Y;
     const path = SEG.map(([cmd, ...pts]) => cmd + pts.map(([x, y]) => `${(PAD_X + x / 100 * w).toFixed(1)} ${(PAD_Y + y / 1000 * h).toFixed(1)}`).join(" ")).join(" ");
@@ -1571,13 +1584,13 @@ window.CV_CONTENT = {
     if (!samples.length) return;
     const [x, y] = pointAt(cur), want = headingAt(cur);
     head = dt ? head + (want - head) * (1 - Math.exp(-dt / .09)) : want;
-    skier.style.transform = `translate3d(${(x - 20).toFixed(2)}px, ${(y - 36).toFixed(2)}px, 0) rotate(${(-head).toFixed(2)}deg)`;
+    skier.style.transform = `translate3d(${(x - 20).toFixed(2)}px, ${(y - 36).toFixed(2)}px, 0) rotate(${(-head).toFixed(2)}deg) scale(${SK})`;
     trail.style.strokeDashoffset = total * (1 - cur);
     cpBtns.forEach((b, i) => {
       const c = cps[i];
       if (!c) return;
       b.classList.toggle("passed", cur >= c.p - .002);
-      b.classList.toggle("under", Math.hypot(c.x - x, c.py - y) < 28);
+      b.classList.toggle("under", Math.hypot(c.x - x, c.py - y) < 28 * SK);
     });
   }
 
@@ -1775,6 +1788,97 @@ window.CV_CONTENT = {
     chatIO.observe($("#s-chat"));
   }
 
+  /* ================= print pagination ================= */
+  // One fixed print layout (desktop columns, fixed font sizes) used both when printing and while measuring,
+  // so phone/tablet media queries can't change what lands on paper.
+  const PRINT_LAYOUT = (p) => `
+    ${p}main{margin:0;padding:0 44px;max-width:none}
+    ${p}main>section{padding:40px 0 6px}
+    ${p}.pass-wrap{min-height:0;padding-top:28px}
+    ${p}.finish{margin:20px 0 0}
+    ${p}h2{font-size:40px}
+    ${p}.scene{width:640px}
+    ${p}.skicard{width:640px;aspect-ratio:auto;min-height:404px;padding:26px 96px 22px 28px;border-radius:22px;gap:14px}
+    ${p}.sc-top{gap:16px}
+    ${p}.brand{min-width:0}
+    ${p}.pass-type{flex:none}
+    ${p}.pass-type b,${p}.pass-type small{white-space:nowrap}
+    ${p}.sc-bot{gap:14px;justify-content:flex-start}
+    ${p}.rfid{display:none}
+    ${p}.skicard .socials{gap:8px;min-width:0}
+    ${p}.skicard .social{width:34px;height:34px;border-radius:10px;flex:none}
+    ${p}.skicard .social svg{width:18px;height:18px}
+    ${p}.skicard .print-only{display:flex;flex-direction:column;gap:1px;margin-left:6px;font-size:11px;line-height:1.3;color:#fff;min-width:0;overflow-wrap:anywhere}
+    ${p}.skicard .print-only i{display:none}
+    ${p}.sc-holo{display:flex;right:26px;width:40px}
+    ${p}.sc-mid{grid-template-columns:96px 1fr;gap:18px;align-items:center}
+    ${p}.photo{width:96px;height:118px;font-size:34px}
+    ${p}.skicard h1{font-size:40px}
+    ${p}.skicard dl{grid-template-columns:auto 1fr}
+    ${p}.skicard dd{margin-bottom:0}
+    ${p}.tagline{font-size:26px;margin-top:28px}
+    ${p}.report{grid-template-columns:repeat(3,1fr)}
+    ${p}.run{grid-template-columns:96px 1fr;padding:24px}
+    ${p}.gear{grid-template-columns:repeat(3,1fr)}
+    ${p}.gear>div:last-child:nth-child(n){grid-column:auto}
+    ${p}.gear>div:last-child:nth-child(3n+1){grid-column:1/-1}
+    ${p}.gear>div:last-child:nth-child(3n+2){grid-column:span 2}
+    ${p}.two{grid-template-columns:1fr 1fr}
+    ${p}.apres{grid-template-columns:repeat(5,1fr)}
+    ${p}.finish p{font-size:60px}`;
+  const printCss = document.createElement("style");
+  printCss.textContent = `@media print{${PRINT_LAYOUT("html ")}}
+    ${PRINT_LAYOUT("html.measuring ")}
+    html.measuring main{width:var(--mw)!important}
+    html.measuring #s-chat,html.measuring .drop,html.measuring .lanyard{display:none!important}
+    html.measuring .reveal{opacity:1!important;transform:none!important;transition:none!important}`;
+  document.head.appendChild(printCss);
+
+  // Page box in pre-zoom CSS px (print uses zoom .8). Safari/iOS ignore @page size/margin and add ~0.5in
+  // margins on Letter paper, so they get a narrower, shorter page.
+  const UA = navigator.userAgent;
+  const WEBKIT_PRINT = /iP(hone|ad|od)/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) ||
+    /^((?!chrome|chromium|crios|android|edg|fxios|firefox).)*safari/i.test(UA);
+  const PAGE = WEBKIT_PRINT ? { w: 900, h: 1140 } : { w: 992, h: 1340 };
+
+  // Measures every section in the print layout, then marks explicit page breaks (.pb) so no section or card
+  // is cut. Tall sections break between their cards; anything still taller than a page is zoomed to fit (.fit).
+  function paginate() {
+    const root = document.documentElement;
+    document.querySelectorAll("#app .pb, #app .fit").forEach((el) => { el.classList.remove("pb", "fit"); el.style.removeProperty("--fit"); });
+    root.style.setProperty("--mw", `${PAGE.w}px`);
+    root.classList.add("measuring");
+    const top = (el) => el.getBoundingClientRect().top;
+    const blocks = [];
+    let end = 0;
+    document.querySelectorAll("#app > section").forEach((sec) => {
+      const r = sec.getBoundingClientRect();
+      if (!r.height) return;
+      end = r.bottom;
+      if (r.height <= PAGE.h) { blocks.push({ el: sec, body: sec, top: r.top }); return; }
+      let head = null, first = true;
+      [...sec.children].forEach((ch) => {
+        if (/^H\d$/.test(ch.tagName)) { head = head || ch; return; }
+        blocks.push({ el: first ? sec : head || ch, body: ch, top: first ? r.top : top(head || ch) });
+        head = null; first = false;
+      });
+    });
+    const fits = blocks.map((b, i) => {
+      const h = (i + 1 < blocks.length ? blocks[i + 1].top : end) - b.top;
+      const bodyH = b.body.getBoundingClientRect().height;
+      return h > PAGE.h && bodyH ? Math.max(.4, (PAGE.h - (h - bodyH)) / bodyH) : 1;
+    });
+    const heights = blocks.map((b, i) => Math.min((i + 1 < blocks.length ? blocks[i + 1].top : end) - b.top, PAGE.h));
+    root.classList.remove("measuring");
+    let used = 0;
+    blocks.forEach((b, i) => {
+      if (fits[i] < 1) { b.body.classList.add("fit"); b.body.style.setProperty("--fit", fits[i].toFixed(3)); }
+      if (used && used + heights[i] > PAGE.h) { b.el.classList.add("pb"); used = heights[i] + (b.el.tagName === "SECTION" ? 0 : 36); }
+      else used += heights[i];
+    });
+  }
+  addEventListener("beforeprint", paginate);
+
   /* ================= events ================= */
   document.addEventListener("click", async (e) => {
     if (!menu.hidden && !e.target.closest("#menu, #askBtn")) closeMenu(false);
@@ -1782,7 +1886,7 @@ window.CV_CONTENT = {
     if (!el) return;
     if (el.id === "askBtn") { if (menu.hidden) openMenu(); else closeMenu(false); return; }
     if (el.dataset.setLang) { if (el.dataset.setLang !== lang) setLang(el.dataset.setLang); return; }
-    if (el.hasAttribute("data-print")) { window.print(); return; }
+    if (el.hasAttribute("data-print")) { paginate(); window.print(); return; }
     if (el.dataset.next) { glideTo(document.getElementById(el.dataset.next)); return; }
     if (el.dataset.target) { glideTo(document.getElementById(el.dataset.target)); return; }
     if (el.id === "whyBtn") { nextWhy(); return; }
